@@ -22,9 +22,17 @@ export class RepositoryScanner {
   }
 
   private walk(currentPath: string, result: ScanResult) {
-    const entries = fs.readdirSync(currentPath, { withFileTypes: true });
+    let entries: fs.Dirent[];
+
+    try {
+      entries = fs.readdirSync(currentPath, { withFileTypes: true });
+    } catch {
+      return;
+    }
 
     for (const entry of entries) {
+      if (entry.isSymbolicLink()) continue;
+
       const fullPath = path.join(currentPath, entry.name);
 
       if (entry.isDirectory()) {
@@ -32,6 +40,7 @@ export class RepositoryScanner {
 
         result.totalFolders += 1;
         this.walk(fullPath, result);
+        continue;
       }
 
       if (entry.isFile()) {

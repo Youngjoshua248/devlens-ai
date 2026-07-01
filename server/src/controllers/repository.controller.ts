@@ -55,12 +55,16 @@ export function getRepositories(_req: Request, res: Response) {
 }
 
 export function scanLocalRepository(_req: Request, res: Response) {
-  const scanner = new RepositoryScanner();
+  console.log("🚀 Scan endpoint called");
 
-  // Scan only the server/src folder for now
+  const scanner = new RepositoryScanner();
   const repoPath = path.resolve(process.cwd(), "src");
 
+  console.log("📁 Repository path:", repoPath);
+
   const result = scanner.scan(repoPath);
+
+  console.log("✅ Repository scan completed!");
 
   return res.status(200).json({
     message: "Repository scanned successfully.",
