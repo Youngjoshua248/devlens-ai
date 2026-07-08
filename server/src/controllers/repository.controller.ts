@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import path from "path";
 import { parseGithubUrl } from "../services/repository.service";
 import { RepositoryScanner } from "../scanner/RepositoryScanner";
+import { ProjectAnalyzer } from "../analyzer/ProjectAnalyzer";
 
 const repositories: {
   id: number;
@@ -70,5 +71,20 @@ export function scanLocalRepository(_req: Request, res: Response) {
     message: "Repository scanned successfully.",
     scannedPath: repoPath,
     result,
+  });
+}
+
+export function summarizeLocalRepository(_req: Request, res: Response) {
+  const scanner = new RepositoryScanner();
+  const analyzer = new ProjectAnalyzer();
+
+  const repoPath = path.resolve(process.cwd(), "src");
+  const scanResult = scanner.scan(repoPath);
+  const summary = analyzer.summarize(scanResult);
+
+  return res.status(200).json({
+    message: "Repository summary generated successfully.",
+    scannedPath: repoPath,
+    summary,
   });
 }
