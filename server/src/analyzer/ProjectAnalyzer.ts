@@ -1,3 +1,5 @@
+import { FrameworkDetector } from "./FrameworkDetector";
+
 type ParsedFile = {
   path: string;
   imports: string[];
@@ -15,19 +17,24 @@ type ScanResult = {
 };
 
 export class ProjectAnalyzer {
+  private frameworkDetector = new FrameworkDetector();
+
   summarize(scanResult: ScanResult) {
     const allRoutes = scanResult.parsedFiles.flatMap(
       (file) => file.expressRoutes,
     );
+
     const allComponents = scanResult.parsedFiles.flatMap(
       (file) => file.reactComponents,
     );
+
     const allFunctions = scanResult.parsedFiles.flatMap(
       (file) => file.functions,
     );
+
     const allImports = scanResult.parsedFiles.flatMap((file) => file.imports);
 
-    return {
+    const baseSummary = {
       overview: {
         totalFiles: scanResult.totalFiles,
         totalFolders: scanResult.totalFolders,
@@ -41,6 +48,11 @@ export class ProjectAnalyzer {
         topImports: this.getTopImports(allImports),
       },
     };
+
+    return {
+      ...baseSummary,
+      stack: this.frameworkDetector.detect(baseSummary),
+    };
   }
 
   private getTopImports(imports: string[]) {
@@ -52,6 +64,9 @@ export class ProjectAnalyzer {
     )
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
-      .map(([name, count]) => ({ name, count }));
+      .map(([name, count]) => ({
+        name,
+        count,
+      }));
   }
 }
