@@ -75,16 +75,31 @@ export function scanLocalRepository(_req: Request, res: Response) {
 }
 
 export function summarizeLocalRepository(_req: Request, res: Response) {
+  console.log("📊 Summary endpoint called");
+
   const scanner = new RepositoryScanner();
   const analyzer = new ProjectAnalyzer();
 
   const repoPath = path.resolve(process.cwd(), "src");
+
+  console.log("📁 Repository path:", repoPath);
+
   const scanResult = scanner.scan(repoPath);
+
+  console.log("✅ Scan completed");
+
   const summary = analyzer.summarize(scanResult);
 
+  console.log("🧠 Summary generated");
+
+  const dashboard = analyzer.createDashboardSummary(summary);
+
+  console.log("🎯 Dashboard summary generated");
+
   return res.status(200).json({
-    message: "Repository summary generated successfully.",
+    message: "Repository dashboard summary generated successfully.",
     scannedPath: repoPath,
-    summary,
+    dashboard,
+    rawSummary: summary,
   });
 }

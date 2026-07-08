@@ -1,4 +1,5 @@
 import { FrameworkDetector } from "./FrameworkDetector";
+import { DependencyGraph } from "../graph/DependencyGraph";
 
 type ParsedFile = {
   path: string;
@@ -18,6 +19,7 @@ type ScanResult = {
 
 export class ProjectAnalyzer {
   private frameworkDetector = new FrameworkDetector();
+  private dependencyGraph = new DependencyGraph();
 
   summarize(scanResult: ScanResult) {
     const allRoutes = scanResult.parsedFiles.flatMap(
@@ -52,7 +54,45 @@ export class ProjectAnalyzer {
     return {
       ...baseSummary,
       stack: this.frameworkDetector.detect(baseSummary),
+      dependencyGraph: this.dependencyGraph.build(scanResult.parsedFiles),
     };
+  }
+
+  createDashboardSummary(summary: any) {
+    return {
+      projectType: this.detectProjectType(summary),
+      language: summary.stack.language,
+      frontend: summary.stack.frontend,
+      backend: summary.stack.backend,
+      database: summary.stack.database,
+      ai: summary.stack.ai,
+      packageManager: summary.stack.packageManager,
+      stats: {
+        files: summary.overview.totalFiles,
+        folders: summary.overview.totalFolders,
+        sourceFiles: summary.overview.parsedSourceFiles,
+        routes: summary.detected.expressRoutes.length,
+        components: summary.detected.reactComponents.length,
+        functions: summary.detected.functions.length,
+        dependencies: summary.dependencyGraph.length,
+      },
+      highlights: {
+        expressRoutes: summary.detected.expressRoutes,
+        reactComponents: summary.detected.reactComponents,
+        topImports: summary.detected.topImports,
+      },
+    };
+  }
+
+  private detectProjectType(summary: any) {
+    if (summary.stack.frontend && summary.stack.backend) {
+      return "Full-Stack App";
+    }
+
+    if (summary.stack.frontend) return "Frontend App";
+    if (summary.stack.backend) return "Backend API";
+
+    return "Unknown Project";
   }
 
   private getTopImports(imports: string[]) {
